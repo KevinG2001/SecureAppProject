@@ -7,14 +7,16 @@
   <body>
     <h1>Register</h1>
 
-    <form method="POST" action="/register">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% if (error) { %>
+    <p style="color: red"><%- error %></p>
+    <% } %>
 
+    <form method="POST" action="/register">
       <label>Username:</label>
       <input type="text" name="username" required /><br />
       <label>Password:</label>
       <input type="password" name="password" required /><br />
-      <button type="submit">Create Account</button>
+      <button type="submit">Register</button>
     </form>
     <a href="/login"><button>Login</button></a>
   </body>

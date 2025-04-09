@@ -20,14 +20,11 @@
       <button onclick="toggleForm()">Create Post</button>
 
       <form action="/logout" method="POST" style="display: inline">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <button type="submit">Logout</button>
       </form>
     </div>
 
     <form id="create-form" action="/posts" method="POST">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-
       <input
         type="text"
         name="title"

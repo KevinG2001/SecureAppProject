@@ -2,35 +2,28 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const csrf = require("csurf");
-const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./routes/accountRoutes.js");
 const blogRoutes = require("./routes/blogRoutes.js");
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: false }));
 
 app.use(
   session({
     name: "sid",
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
+    secret: "insecure",
+    resave: true,
+    saveUninitialized: true,
     cookie: {
-      httpOnly: true,
+      httpOnly: false,
       secure: false,
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 15,
+      sameSite: "none",
+      maxAge: 1000 * 60 * 60 * 24 * 30,
     },
   })
 );
-
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
