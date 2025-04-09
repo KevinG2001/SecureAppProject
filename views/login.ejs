@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login Page</title>
+  </head>
+  <body>
+    <h1>Login</h1>
+
+    <% if (error) { %>
+    <p style="color: red"><%= error %></p>
+    <% } %>
+
+    <form method="POST" action="/login">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <label>Username:</label>
+      <input type="text" name="username" required /><br />
+      <label>Password:</label>
+      <input type="password" name="password" required /><br />
+      <button type="submit">Login</button>
+    </form>
+    <a href="/register"><button>Register</button></a>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <style>
+      #create-form {
+        display: none;
+        margin-top: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My Blog Posts</h1>
+
+    <div>
+      <button onclick="toggleForm()">Create Post</button>
+
+      <form action="/logout" method="POST" style="display: inline">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button type="submit">Logout</button>
+      </form>
+    </div>
+
+    <form id="create-form" action="/posts" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <input
+        type="text"
+        name="title"
+        placeholder="Title"
+        required
+      /><br /><br />
+      <textarea
+        name="content"
+        placeholder="Content"
+        rows="5"
+        required
+      ></textarea
+      ><br /><br />
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      function toggleForm() {
+        const form = document.getElementById("create-form");
+        form.style.display = form.style.display === "none" ? "block" : "none";
+      }
+    </script>
+
+    <% if (posts.length === 0) { %>
+    <p>No blog posts yet!</p>
+    <% } else { %> <% posts.forEach(post => { %>
+    <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0">
+      <h2><%= post.title %></h2>
+      <p><%= post.content %></p>
+      <small>By <%= post.author %> on <%= post.created_at %></small>
+    </div>
+    <% }); %> <% } %>
+  </body>
+</html>
