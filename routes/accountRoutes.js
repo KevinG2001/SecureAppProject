@@ -13,25 +13,15 @@ router.get("/login", (req, res) => {
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.render("register", {
-      error: "All fields are required.",
-    });
-  }
-
   const hashedPassword = password;
 
   const query = `INSERT INTO users (username, password) VALUES ('${username}', '${hashedPassword}')`;
   db.run(query, function (err) {
     if (err) {
       if (err.message.includes("UNIQUE")) {
-        return res.render("register", {
-          error: "Username already exists.",
-        });
+        return res.render("register", { error: "Username already exists." });
       }
-      return res.render("register", {
-        error: "An error occurred.",
-      });
+      return res.render("register", { error: "An error occurred." });
     }
     res.redirect("/login");
   });
@@ -39,30 +29,20 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
-  console.log("Login endpoint");
 
-  const query = `SELECT * FROM users WHERE username = '${username}'`;
+  const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+
+  console.log("Running query: ", query);
 
   db.get(query, (err, user) => {
-    console.log("Comparing user");
     if (err || !user) {
+      console.log("User not found or error: ", err);
       return res.render("login", {
         error: "Invalid username or password.",
       });
     }
 
-    console.log("Comparing password");
-    if (password !== user.password) {
-      return res.render("login", {
-        error: "Invalid username or password.",
-      });
-    }
-
-    req.session.user = {
-      id: user.id,
-      username: user.username,
-    };
-
+    req.session.user = { id: user.id, username: user.username };
     res.redirect("/home");
   });
 });
