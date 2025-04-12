@@ -4,14 +4,33 @@ const path = require("path");
 const session = require("express-session");
 const csrf = require("csurf");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
 
 const authRoutes = require("./routes/accountRoutes.js");
 const blogRoutes = require("./routes/blogRoutes.js");
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
 
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:"],
+      "font-src": ["'self'", "https:", "data:"],
+      "object-src": ["'none'"],
+      "base-uri": ["'self'"],
+      "form-action": ["'self'"],
+      "frame-ancestors": ["'self'"],
+    },
+  })
+);
+
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(
