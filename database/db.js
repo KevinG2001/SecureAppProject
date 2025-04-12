@@ -1,18 +1,19 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const logger = require("../util/logger");
 
 const db = new sqlite3.Database(
   path.join(__dirname, "database.sqlite"),
   (err) => {
     if (err) {
-      console.error("Error opening database:", err.message);
+      logger.error(`Database connection error: ${err.message}`);
     } else {
-      console.log("Connected to SQLite database");
+      logger.info("Connected to SQLite database");
     }
   }
 );
 
-//Users Table
+// Users Table
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -23,7 +24,7 @@ db.serialize(() => {
   `);
 });
 
-//Posts Table
+// Posts Table
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS posts (

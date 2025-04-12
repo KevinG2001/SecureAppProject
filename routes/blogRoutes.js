@@ -3,15 +3,18 @@ const router = express.Router();
 const db = require("../database/db.js");
 const sanitizeHtml = require("sanitize-html");
 const { isAuthenticated } = require("../middleware/auth.js");
+const logger = require("../util/logger");
 
 router.get("/home", isAuthenticated, (req, res) => {
   const query = `SELECT * FROM posts ORDER BY created_at DESC`;
 
   db.all(query, [], (err, posts) => {
     if (err) {
+      logger.error("Failed to load blog posts");
       return res.send("Error loading posts");
     }
 
+    logger.info("Blog posts loaded successfully");
     res.render("home", {
       posts,
       user: req.session.user,
@@ -25,6 +28,7 @@ router.post("/posts", isAuthenticated, (req, res) => {
   const author = req.session.user.username;
 
   if (!title || !content) {
+    logger.warn("Post creation failed: Missing title or content");
     return res.send("Title and content are required.");
   }
 
@@ -41,10 +45,11 @@ router.post("/posts", isAuthenticated, (req, res) => {
   const query = `INSERT INTO posts (title, content, author) VALUES (?, ?, ?)`;
   db.run(query, [title, content, author], function (err) {
     if (err) {
-      console.error("Error inserting post:", err);
+      logger.error(`Post creation error: ${err.message}`);
       return res.send("Failed to create post");
     }
 
+    logger.info(`New post created by ${author}: "${title}"`);
     res.redirect("/home");
   });
 });
