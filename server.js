@@ -5,6 +5,7 @@ const session = require("express-session");
 const csrf = require("csurf");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
+const SQLiteStore = require("connect-sqlite3")(session);
 
 const authRoutes = require("./routes/accountRoutes.js");
 const blogRoutes = require("./routes/blogRoutes.js");
@@ -39,6 +40,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: new SQLiteStore({
+      db: "database.sqlite",
+      dir: path.join(__dirname, "database"),
+    }),
+
     cookie: {
       httpOnly: true,
       secure: false,
