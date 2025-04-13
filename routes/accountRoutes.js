@@ -12,6 +12,10 @@ router.get("/register", (req, res) => {
   res.render("register", { error: null, csrfToken: req.csrfToken() });
 });
 
+router.get("/resetPassword", (req, res) => {
+  res.render("resetPassword", { error: null, csrfToken: req.csrfToken() });
+});
+
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
@@ -62,14 +66,41 @@ router.post("/login", (req, res) => {
       });
     }
 
+    if (user.login_Attempts >= 3) {
+      logger.warn(`User locked out: ${username}`);
+      return res.render("login", {
+        error: "Account locked due to too many failed attempts.",
+        csrfToken: req.csrfToken(),
+      });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
+      const updateQuery = `
+        UPDATE users
+        SET login_Attempts = login_Attempts + 1,
+            last_attempt = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      db.run(updateQuery, [user.id], (updateErr) => {
+        if (updateErr) {
+          logger.error(
+            `Failed to update login attempts for ${username}: ${updateErr.message}`
+          );
+        }
+      });
+
       logger.warn(`Login failed: Incorrect password for ${username}`);
       return res.render("login", {
         error: "Invalid username or password.",
         csrfToken: req.csrfToken(),
       });
     }
+
+    db.run(
+      `UPDATE users SET login_Attempts = 0, last_attempt = NULL WHERE id = ?`,
+      [user.id]
+    );
 
     req.session.user = {
       id: user.id,
@@ -91,6 +122,61 @@ router.post("/logout", (req, res) => {
     res.clearCookie("sid");
     logger.info(`User logged out: ${username}`);
     res.redirect("/login");
+  });
+});
+
+router.post("/resetPassword", async (req, res) => {
+  const { username, oldPassword, newPassword } = req.body;
+
+  if (!username || !oldPassword || !newPassword) {
+    return res.render("resetPassword", {
+      error: "All fields are required.",
+      csrfToken: req.csrfToken(),
+    });
+  }
+
+  const query = `SELECT * FROM users WHERE username = ?`;
+  db.get(query, [username], async (err, user) => {
+    if (err || !user) {
+      logger.warn(`Password reset failed: User not found - ${username}`);
+      return res.render("resetPassword", {
+        error: "Invalid username or password.",
+        csrfToken: req.csrfToken(),
+      });
+    }
+
+    const match = await bcrypt.compare(oldPassword, user.password);
+    if (!match) {
+      logger.warn(
+        `Password reset failed: Incorrect old password for ${username}`
+      );
+      return res.render("resetPassword", {
+        error: "Old password is incorrect.",
+        csrfToken: req.csrfToken(),
+      });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const updateQuery = `
+      UPDATE users
+      SET password = ?, login_Attempts = 0, last_attempt = NULL
+      WHERE username = ?
+    `;
+
+    db.run(updateQuery, [hashedNewPassword, username], function (updateErr) {
+      if (updateErr) {
+        logger.error(
+          `Failed to reset password for ${username}: ${updateErr.message}`
+        );
+        return res.render("resetPassword", {
+          error: "An error occurred.",
+          csrfToken: req.csrfToken(),
+        });
+      }
+
+      logger.info(`Password reset successful for ${username}`);
+      res.redirect("/login");
+    });
   });
 });
 
